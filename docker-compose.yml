@@ -1,0 +1,23 @@
+postgres:
+  image: postgres:9.4.3
+  ports:
+    - "5432:5432"
+  environment:
+    POSTGRES_PASSWORD: 3x4mpl3
+
+web:
+  image: ruby:2.2.3
+  ports:
+    - "3000:3000"
+  volumes:
+    - .:/usr/src/app
+  working_dir: /usr/src/app
+  entrypoint: /usr/src/app/dev-entrypoint.sh
+  environment:
+    DATABASE_URL: postgres://postgres:3x4mpl3@postgres.example.com:5432/my_app_dev?pool=25&encoding=unicode&schema_search_path=public,partitioning
+    RAILS_ENV: development
+    RACK_ENV: development
+  links:
+    - postgres:postgres.example.com
+  env_file:
+    - dev.env
