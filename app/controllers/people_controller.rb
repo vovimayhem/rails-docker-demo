@@ -21,6 +21,13 @@ class PeopleController < ApplicationController
   def edit
   end
 
+  # GET /people/debug
+  def debug
+    @people = Person.all.limit(2)
+    byebug
+    puts "Stepped out of breakpoint!"
+  end
+
   # POST /people
   # POST /people.json
   def create

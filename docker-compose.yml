@@ -26,6 +26,7 @@ gems: &app_base
 
 web: &app
   <<: *app_base
+  stdin_open: true
   volumes_from: [ "gems" ]
   ports: [ "3000:3000" ]
   entrypoint: /usr/src/app/dev-entrypoint.sh
