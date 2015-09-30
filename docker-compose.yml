@@ -1,23 +1,34 @@
 postgres:
   image: postgres:9.4.3
-  ports:
-    - "5432:5432"
+  ports: [ "5432:5432" ]
   environment:
     POSTGRES_PASSWORD: 3x4mpl3
 
-web:
+redis:
+  image: redis:3.0.4
+  ports: [ "6379:6379" ]
+  command: redis-server --appendonly yes
+
+# Los gems y la configuración base:
+gems: &app_base
   image: ruby:2.2.3
-  ports:
-    - "3000:3000"
-  volumes:
-    - .:/usr/src/app
+  volumes: [ ".:/usr/src/app", "/usr/local/bundle" ]
   working_dir: /usr/src/app
-  entrypoint: /usr/src/app/dev-entrypoint.sh
   environment:
     DATABASE_URL: postgres://postgres:3x4mpl3@postgres.example.com:5432/my_app_dev?pool=25&encoding=unicode&schema_search_path=public,partitioning
+    REDIS_URL: redis://redis.example.com:6379
     RAILS_ENV: development
     RACK_ENV: development
-  links:
-    - postgres:postgres.example.com
-  env_file:
-    - dev.env
+  links: [ "postgres:postgres.example.com", "redis:redis.example.com"]
+  env_file: [ "dev.env" ]
+
+web: &app
+  <<: *app_base
+  volumes_from: [ "gems" ]
+  entrypoint: /usr/src/app/dev-entrypoint.sh
+  ports: [ "3000:3000" ]
+
+jobs:
+  <<: *app
+  ports: []
+  command: sidekiq -c 25
