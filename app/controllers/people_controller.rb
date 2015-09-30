@@ -21,6 +21,13 @@ class PeopleController < ApplicationController
   def edit
   end
 
+  # GET /people/debug
+  def debug
+    @people = Person.all
+    byebug
+    puts "====== Continued execution from breakpoint ======"
+  end
+
   # POST /people
   # POST /people.json
   def create
