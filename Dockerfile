@@ -1,12 +1,12 @@
 FROM ruby:2.2.3
 
-ENV RAILS_ENV=production RACK_ENV=production
+ENV PATH=/usr/src/app/bin:$PATH RAILS_ENV=production RACK_ENV=production
 
 ADD . /usr/src/app
 WORKDIR /usr/src/app
 
 # Clean up un-needed files:
-RUN rm -rf .dockerignore Dockerfile tmp/cache/* tmp/pids/* log/* dev-entrypoint.sh docker-compose.yml *.env .env
+RUN rm -rf .dockerignore Dockerfile tmp/cache/* tmp/pids/* log/* dev-entrypoint.sh docker-compose.yml *.env .env examples
 
 # Run a bundle install:
 RUN bundle install --deployment --without development test
@@ -25,4 +25,4 @@ RUN DATABASE_URL=postgres://postgres@example.com:5432/fakedb \
 EXPOSE 3000 28080
 
 # Default command:
-CMD ["bundle", "exec", "puma", "--bind", "tcp://0.0.0.0:3000"]
+CMD bundle exec puma --bind tcp://0.0.0.0:3000
