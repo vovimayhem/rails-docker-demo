@@ -1,0 +1,90 @@
+---
+postgres:
+  image: postgres:9.4.5
+  environment:
+    POSTGRES_PASSWORD: 3x4mpl3
+  labels:
+    # Make Postgres run containers only on hosts with the label
+    # 'can_host_databases' set to 'true', which would ideally denote hosts with
+    # good memory, storage and IO performance:
+    io.rancher.scheduler.affinity:host_label: can_host_databases=true
+
+redis:
+  image: redis:3.0.5
+  command: redis-server --appendonly yes
+  labels:
+    # Make Redis run containers only on hosts with the label
+    # 'can_host_databases' set to 'true', which would ideally denote hosts with
+    # good memory, storage and IO performance:
+    io.rancher.scheduler.affinity:host_label: can_host_databases=true
+
+# The App container running the sidekiq job processor:
+jobs:
+  image: vovimayhem/rails-docker-demo:0.0.1-beta1
+  command: bundle exec sidekiq -c $SIDEKIQ_CONCURRENCY
+  links:
+    - "postgres:postgres.example.com"
+    - "redis:redis.example.com"
+  labels:
+    # Make the jobs containers to run only on hosts with the label
+    # 'can_host_apps' set to 'true', which would ideally denote hosts that don't
+    # necesarily have goot storage performance, but can still run applications:
+    io.rancher.scheduler.affinity:host_label: can_host_apps=true
+    # Make a soft anti-affinity rule so that the scheduler is still allowed to
+    # deploy a container to a host that already has that container running.
+    # Basically, this is a soft rule so it can be ignored if no better
+    # alternative exists:
+    io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
+  environment:
+    SIDEKIQ_CONCURRENCY: 25
+    DATABASE_URL: postgres://postgres:3x4mpl3@postgres.example.com:5432/my_app_production?pool=25&encoding=unicode&schema_search_path=public,partitioning
+    REDIS_URL: redis://redis.example.com:6379
+    SECRET_KEY_BASE: GENERATE_ONE_WITH_RAKE
+    TWITTER_API_KEY: SOME_API_KEY
+    TWITTER_API_SECRET: SOME_API_SECRET
+
+web:
+  image: vovimayhem/rails-docker-demo:0.0.1-beta1
+  command: bundle exec puma --bind tcp://0.0.0.0:3000 config.ru
+  links:
+    - "postgres:postgres.example.com"
+    - "redis:redis.example.com"
+  labels:
+    # Make the jobs containers to run only on hosts with the label
+    # 'can_host_apps' set to 'true', which would ideally denote hosts that don't
+    # necesarily have goot storage performance, but can still run applications:
+    io.rancher.scheduler.affinity:host_label: can_host_apps=true
+    # Make a soft anti-affinity rule so that the scheduler is still allowed to
+    # deploy a container to a host that already has that container running.
+    # Basically, this is a soft rule so it can be ignored if no better
+    # alternative exists:
+    io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
+  environment:
+    DATABASE_URL: postgres://postgres:3x4mpl3@postgres.example.com:5432/my_app_production?pool=25&encoding=unicode&schema_search_path=public,partitioning
+    REDIS_URL: redis://redis.example.com:6379
+    SECRET_KEY_BASE: GENERATE_ONE_WITH_RAKE
+    TWITTER_API_KEY: SOME_API_KEY
+    TWITTER_API_SECRET: SOME_API_SECRET
+    APP_DOMAIN: YOUR_APP_DEPLOYMENT_DOMAIN_FOR_COOKIE_SHARING_BETWEEN_WEB_AND_CABLE
+    APP_CABLE_URL: YOUR_APP_DEPLOYMENT_WEB_URL
+
+cable:
+  image: vovimayhem/rails-docker-demo:0.0.1-beta1
+  command: bundle exec puma --bind tcp://0.0.0.0:28080 cable/config.ru
+  links:
+    - "redis:redis.example.com"
+  labels:
+    # Make the jobs containers to run only on hosts with the label
+    # 'can_host_apps' set to 'true', which would ideally denote hosts that don't
+    # necesarily have goot storage performance, but can still run applications:
+    io.rancher.scheduler.affinity:host_label: can_host_apps=true
+    # Make a soft anti-affinity rule so that the scheduler is still allowed to
+    # deploy a container to a host that already has that container running.
+    # Basically, this is a soft rule so it can be ignored if no better
+    # alternative exists:
+    io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
+  environment:
+    REDIS_URL: redis://redis.example.com:6379
+    SECRET_KEY_BASE: GENERATE_ONE_WITH_RAKE
+    APP_DOMAIN: YOUR_APP_DEPLOYMENT_DOMAIN_FOR_COOKIE_SHARING_BETWEEN_WEB_AND_CABLE
+    APP_WEB_URL: YOUR_APP_DEPLOYMENT_WEB_URL

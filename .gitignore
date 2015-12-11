@@ -17,3 +17,5 @@
 /*.env
 
 /.byebug_history
+
+/examples/rancher/docker-compose.yml
