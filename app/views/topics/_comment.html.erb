@@ -1,0 +1,4 @@
+<li class="<%= current_user.id == comment.user_id ? 'own' : 'user' %> comment">
+  <div class="nickname"><%= comment.user.nickname %></div>
+  <div class="body"><%= comment.body %></div>
+</li>

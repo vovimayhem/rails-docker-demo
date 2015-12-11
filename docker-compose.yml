@@ -85,3 +85,8 @@ web:
   <<: *app
   command: rails server -b 0.0.0.0 -p 3000 -P /tmp/rails.pid
   ports: [ "3000:3000" ]
+
+cable:
+  <<: *app
+  command: puma --bind tcp://0.0.0.0:28080 cable/config.ru
+  ports: [ "28080:28080"]

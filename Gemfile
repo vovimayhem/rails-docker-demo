@@ -24,6 +24,11 @@ gem 'jbuilder', '~> 2.0'
 # bundle exec rake doc:rails generates the API under doc/api.
 gem 'sdoc', '~> 0.4.0', group: :doc
 
+gem 'devise', '~> 3.5.2'
+gem 'omniauth-twitter', '~> 1.2.1'
+
+gem 'actioncable', github: 'rails/actioncable', ref: '0e283fe'
+
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 

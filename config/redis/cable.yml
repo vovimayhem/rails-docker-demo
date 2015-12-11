@@ -1,0 +1,4 @@
+<%= ENV.fetch "RAILS_ENV", ENV.fetch("RACK_ENV", 'production') %>:
+  url: <%= ENV.fetch 'REDIS_URL', 'redis://localhost:6379' %>
+  :timeout: 1
+  :inline: true
