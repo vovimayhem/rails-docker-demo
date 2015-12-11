@@ -1,35 +1,87 @@
 postgres:
-  image: postgres:9.4.3
+  image: postgres:9.4.5
   ports: [ "5432:5432" ]
   environment:
     POSTGRES_PASSWORD: 3x4mpl3
 
 redis:
-  image: redis:3.0.4
+  image: redis:3.0.5
   ports: [ "6379:6379" ]
   command: redis-server --appendonly yes
 
-# Los gems y la configuración base:
+# The app base configuration and the shared installed gems used by the rest of
+# the app containers will be declared in this container named 'gems'. This
+# container will effectively be a "data-only" container:
 gems: &app_base
   image: ruby:2.2.3
-  volumes: [ ".:/usr/src/app", "/usr/local/bundle" ]
+  volumes:
+    # Mount our app code directory (".") into our app containers at the
+    # "/usr/src/app" folder:
+    - ".:/usr/src/app"
+
+    # Declare this container's "/usr/local/bundle", so the rest of our app
+    # containers can mount the same gems installed by bundler, and prevent each
+    # app container to install the exact same gems over and over:
+    - "/usr/local/bundle"
+
+  # Specify the directory where the code is mounted as the working directory,
+  # so every command can run in the context of the code directory:
   working_dir: /usr/src/app
-  environment:
+
+  # Keep the stdin open, so we can attach to our app container's process
+  # and do things such as byebug, etc:
+  stdin_open: true
+
+  # Link to our postgres and redis containers, so they can be visible from our
+  # app containers:
+  links:
+    # We'll link the postgres container, making it available at the
+    # 'postgres.example.com' domain:
+    - "postgres:postgres.example.com"
+
+    # We'll link the redis container, making it available at the
+    # 'redis.example.com' domain:
+    - "redis:redis.example.com"
+
+  # Specify environment variables available for our app containers. We'll leave
+  # a YML anchor in case we need to override or add more variables if needed on
+  # each app container:
+  environment: &app_environment
+
+    # We'll overwrite the PATH environment variable to include the 'bin/'
+    # directory, for the entrypoint script to find the app's executables:
+    PATH: /usr/src/app/bin:/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+    # We'll set the DATABASE_URL environment variable for the app to connect
+    # to our postgres container - no need to use a 'config/database.yml' file.
     DATABASE_URL: postgres://postgres:3x4mpl3@postgres.example.com:5432/my_app_dev?pool=25&encoding=unicode&schema_search_path=public,partitioning
+
+    # We'll set the REDIS_URL environment variable for the app to connect
+    # to our redis container:
     REDIS_URL: redis://redis.example.com:6379
+
+    # We'll set the RAILS_ENV and RACK_ENV environment variables to
+    # 'development', so our app containers will start in 'development' mode
+    # on this compose project:
     RAILS_ENV: development
     RACK_ENV: development
-  links: [ "postgres:postgres.example.com", "redis:redis.example.com"]
-  env_file: [ "dev.env" ]
 
-web: &app
+  # We'll specify a dotenv file for docker-compose to load more environment
+  # variables into our app containers. This dotenv file would normally contain
+  # sensitive data (API keys & secrets, etc) which SHOULD NOT be committed into
+  # Git.
+  # Keep in mind that any changes in this file will require a container restart
+  # in order to be available on the app containers:
+  env_file:
+    - "dev.env"
+
+jobs: &app
   <<: *app_base
-  stdin_open: true
   volumes_from: [ "gems" ]
   entrypoint: /usr/src/app/dev-entrypoint.sh
-  ports: [ "3000:3000" ]
-
-jobs:
-  <<: *app
-  ports: []
   command: sidekiq -c 25
+
+web:
+  <<: *app
+  command: rails server -b 0.0.0.0 -p 3000 -P /tmp/rails.pid
+  ports: [ "3000:3000" ]
