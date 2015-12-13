@@ -68,6 +68,17 @@ web:
     APP_DOMAIN: YOUR_APP_DEPLOYMENT_DOMAIN_FOR_COOKIE_SHARING_BETWEEN_WEB_AND_CABLE
     APP_CABLE_URL: YOUR_APP_DEPLOYMENT_WEB_URL
 
+publiclb:
+  image: rancher/load-balancer-service
+  stdin_open: true
+  tty: true
+  ports: [ '80', '28080' ]
+  links: [ 'web:web', 'cable:cable' ]
+  labels:
+    io.rancher.loadbalancer.target.web: rails-docker-demo.example.com:80=3000
+    io.rancher.loadbalancer.target.cable: cable.rails-docker-demo.example.com:28080=28080
+    io.rancher.scheduler.affinity:host_label: can_host_load_balancers=true
+
 cable:
   image: vovimayhem/rails-docker-demo:0.0.1-beta1
   command: bundle exec puma --bind tcp://0.0.0.0:28080 cable/config.ru
