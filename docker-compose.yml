@@ -32,6 +32,9 @@ gems: &app_base
   # and do things such as byebug, etc:
   stdin_open: true
 
+  # Enable sending signals (CTRL+C, CTRL+P + CTRL+Q) into the container:
+  tty: true
+
   # Link to our postgres and redis containers, so they can be visible from our
   # app containers:
   links:
