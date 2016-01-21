@@ -24,8 +24,8 @@ gems: &app_base
     # app container to install the exact same gems over and over:
     - "/usr/local/bundle"
 
-  # Specify the directory where the code is mounted as the working directory,
-  # so every command can run in the context of the code directory:
+  # Specify the directory from where all commands sent to the container will be 
+  # issued to where the code is mounted:
   working_dir: /usr/src/app
 
   # Keep the stdin open, so we can attach to our app container's process
