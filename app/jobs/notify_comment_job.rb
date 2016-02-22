@@ -1,4 +1,4 @@
-class NotifyCommentJob < ActiveJob::Base
+class NotifyCommentJob < ApplicationJob
   queue_as :default
 
   def perform(*args)

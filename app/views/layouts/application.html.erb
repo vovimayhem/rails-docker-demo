@@ -1,19 +1,15 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Rails and Docker Demo App: The Live Forum</title>
-  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+  <head>
+    <title>Rails and Docker Demo App</title>
+    <%= csrf_meta_tags %>
+    <%= action_cable_meta_tag %>
 
-  <script type="text/javascript">
-    window.appCableUrl = '<%= ENV.fetch("APP_CABLE_URL", "ws://localhost:28080") %>';
-  </script>
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  </head>
 
-  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
-  <%= csrf_meta_tags %>
-</head>
-<body>
-
-<%= yield %>
-
-</body>
+  <body>
+    <%= yield %>
+  </body>
 </html>
