@@ -96,7 +96,7 @@ services:
 
       # We'll set the DATABASE_URL environment variable for the app to connect
       # to our postgres container - no need to use a 'config/database.yml' file.
-      DATABASE_URL: postgres://postgres:3x4mpl3@db:5432/my_app_dev?pool=25&encoding=unicode&schema_search_path=public,partitioning
+      DATABASE_URL: postgres://postgres:3x4mpl3@db:5432/demo_development?pool=25&encoding=unicode&schema_search_path=public,partitioning
 
       # We'll set the REDIS_URL environment variable for the app to connect
       # to our redis container:

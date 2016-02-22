@@ -25,8 +25,6 @@ while [ -f $APP_SETUP_LOCK ]; do wait_setup; done
 # app containers will try to install gems and setup the database concurrently:
 lock_setup
 
-# TODO: Replace steps 5 & 6 with `bin/setup`:
-
 # 5: Check or install the app dependencies via Bundler:
 bundle check || bundle
 
