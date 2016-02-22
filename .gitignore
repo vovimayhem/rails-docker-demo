@@ -15,3 +15,7 @@
 
 # Ignore Byebug command history file.
 .byebug_history
+
+# Ignore dotenv files
+/dev.env
+/examples/production-deploy-on-rancher/demo.env
