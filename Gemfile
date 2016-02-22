@@ -33,12 +33,19 @@ gem 'redis', '~> 3.0'
 
 gem 'bootstrap-sass', '~> 3.3.6'
 
-gem 'devise', '~> 3.5.2'
+gem 'devise', '~> 4.0.0-rc1'
 gem 'omniauth-twitter', '~> 1.2.1'
 
-gem 'redis-rails'
+# TODO: Keep an eye on https://github.com/redis-store/redis-rails/issues/30,
+# and update the reference whenever it's released:
+gem 'redis-rails', github: 'redis-store/redis-rails', branch: 'master'
+gem 'redis-rack',  github: "schuylr/redis-rack", ref: "a01bfe5a8ee1df4af6c3a886e005896fe711aab7"
+gem 'redis-activesupport', github: "claudiob/redis-activesupport", ref: "d83917b3a852a98cd0bee8709ab52e5437f7ca11"
+gem 'redis-actionpack', github: "schuylr/redis-actionpack", ref: "b4b37571e3db63cf10713995e7d1ef85e3183b42"
+
 gem 'sidekiq'
-gem 'sinatra', require: nil
+# TODO: Keep an eye on https://github.com/mperham/sidekiq/issues/2839, and Sinatra:
+gem 'sinatra', github: 'sinatra/sinatra', branch: 'master', require: nil
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
