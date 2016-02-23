@@ -1,22 +1,42 @@
-App.appearance = App.cable.subscriptions.create "AppearanceChannel",
+App.cable.subscriptions.create "AppearanceChannel",
+  # Called when the subscription is ready for use on the server
   connected: ->
-    # Called once the subscription has been successfully completed
+    console.log "AppearanceChannel - connected"
+    @install()
+    @appear()
 
+  # Called when the WebSocket connection is closed
+  disconnected: ->
+    console.log "AppearanceChannel - disconnected"
+    @uninstall()
+
+  # Called when the subscription is rejected by the server
   rejected: ->
-    # Called when the subscription is rejected by the server
+    console.log "AppearanceChannel - rejected"
+    @uninstall()
 
   appear: ->
-    @perform 'appear', appearing_on: @appearingOn()
+    console.log "AppearanceChannel - appear"
+    # Calls `AppearanceChannel#appear(data)` on the server
+    @perform("appear", appearing_on: $("main").data("appearing-on"))
 
   away: ->
-    @perform 'away'
+    console.log "AppearanceChannel - away"
+    # Calls `AppearanceChannel#away` on the server
+    @perform("away")
 
-  appearingOn: ->
-    $('main').data 'appearing-on'
+  buttonSelector: "[data-behavior~=appear_away]"
 
-$(document).on 'page:change', ->
-  App.appearance.appear()
+  install: ->
+    $(document).on "page:change.appearance", =>
+      @appear()
 
-$(document).on 'click', '[data-behavior~=appear_away]', ->
-  App.appearance.away()
-  false
+    $(document).on "click.appearance", @buttonSelector, =>
+      @away()
+      false
+
+    $(@buttonSelector).show()
+
+  uninstall: ->
+    $(document).off(".appearance")
+    $(@buttonSelector).hide()
