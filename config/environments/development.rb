@@ -62,4 +62,10 @@ Rails.application.configure do
   # Configure access to the web console from
   config.web_console.whitelisted_ips = ENV["WEB_CONSOLE_WHITELISTED_IPS"].split \
     if ENV.key? "WEB_CONSOLE_WHITELISTED_IPS"
+
+  # Actioncable configuration:
+  config.action_cable.url = ENV.fetch("APP_CABLE_URL", "ws://localhost:28080")
+  config.action_cable.allowed_request_origins = [
+    ENV.fetch("APP_WEB_URL", 'http://localhost:3000')
+  ]
 end

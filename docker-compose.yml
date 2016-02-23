@@ -51,7 +51,7 @@ services:
   # containers:
   jobs: &app
     image: ruby:2.3.0
-    command: sidekiq -c 25
+    command: sidekiq -c 25 -q demo_development_default
     entrypoint: /usr/src/app/dev-entrypoint.sh
     networks:
       - back-tier
