@@ -50,7 +50,7 @@ services:
   # The job processor container - we'll use this as a base for the rest of the
   # containers:
   jobs: &app
-    image: ruby:2.2.3
+    image: ruby:2.3.0
     command: sidekiq -c 25
     entrypoint: /usr/src/app/dev-entrypoint.sh
     networks:
