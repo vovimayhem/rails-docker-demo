@@ -1,0 +1,52 @@
+---
+postgres:
+  image: postgres:9.5.1
+  volumes: [ "/var/lib/postgresql/data" ]
+  environment:
+    POSTGRES_PASSWORD: 3x4mpl3
+  labels:
+    io.rancher.scheduler.affinity:host_label: data-host=true
+
+redis:
+  image: redis:3.0.7
+  volumes: [ "/var/lib/redis" ]
+  command: redis-server --appendonly yes
+  labels:
+    io.rancher.scheduler.affinity:host_label: data-host=true
+
+sidekiq: &app
+  image: vovimayhem/rails-docker-demo:latest
+  stdin_open: true
+  tty: true
+  command: sidekiq -c 25
+  links:
+    - "postgres:postgres.example.com"
+    - "redis:redis.example.com"
+  environment: &app_environment
+    DATABASE_URL: postgres://postgres:3x4mpl3@postgres.example.com:5432/demo_production?pool=25&encoding=unicode&schema_search_path=public,partitioning
+    REDIS_URL: redis://redis.example.com:6379
+    RAILS_ENV: production
+    RACK_ENV: production
+  env_file: [ "demo.env" ]
+  labels:
+    io.rancher.scheduler.affinity:host_label: app-host=true
+
+rails:
+  <<: *app
+  command: /usr/bin/supervisord --configuration=/usr/src/app/config/nginx-supervisord.conf
+
+actioncable:
+  <<: *app
+  command: puma cable/config.ru
+
+# The Web app + API load balancer:
+# web:
+#   image: rancher/load-balancer-service
+#   stdin_open: true
+#   tty: true
+#   ports: [ "28080:28080", "80:3000" ]
+#   labels:
+#     io.rancher.loadbalancer.target.rails: 80=3000
+#     io.rancher.loadbalancer.target.actioncable: 28080=28080
+#     io.rancher.scheduler.affinity:host_label: public-http=true
+#   links: [ "rails:rails", "actioncable:actioncable" ]
