@@ -2,21 +2,21 @@ FROM ruby:2.3.0-slim
 
 ENV PATH=/usr/src/app/bin:$PATH RAILS_ENV=production RACK_ENV=production
 
-ADD . /usr/src/app
-WORKDIR /usr/src/app
-
 RUN set -ex \
   && apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
   && echo "deb http://nginx.org/packages/mainline/debian/ jessie nginx" >> /etc/apt/sources.list \
   && apt-get update \
   && runDeps=' \
-      ca-certificates \
-      gettext-base \
       nginx=1.9.10-1~jessie \
       supervisor \
   ' \
   && apt-get install -y --no-install-recommends $runDeps \
   && rm -rf /var/lib/apt/lists/*
+
+ADD . /usr/src/app
+WORKDIR /usr/src/app
+
+RUN chown -R nobody /usr/src/app/tmp
 
 # # Install dependencies:
 # RUN set -ex \
@@ -60,6 +60,8 @@ RUN set -ex \
 # - Port 3000 for the Rails web process
 # - Port 28080 for the ActionCable WebSocket server (Puma)
 EXPOSE 3000 28080
+
+USER nobody
 
 # Default command:
 CMD bundle exec puma --bind tcp://0.0.0.0:3000
