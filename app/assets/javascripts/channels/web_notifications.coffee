@@ -11,6 +11,10 @@ App.cable.subscriptions.create "WebNotificationsChannel",
   disconnected: ->
     console.log "WebNotificationsChannel - disconnected"
 
+  # Called when the subscription is rejected by the server
+  rejected: ->
+    console.log "WebNotificationsChannel - rejected"
+
   received: (data) ->
     console.log "WebNotificationsChannel", data
     new Notification data["title"], body: data["body"]

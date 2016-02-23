@@ -5,12 +5,12 @@ module ApplicationCable
 
     def connect
       self.current_user = find_verified_user
+      logger.add_tags 'ActionCable', current_user.nickname
     end
 
     protected
       def find_verified_user
-        session = cookies.signed_or_encrypted['_app_session']
-        # debugger
+        session = cookies.signed_or_encrypted['_demo_session']
         if session && session['warden.user.user.key'] &&
         session['warden.user.user.key'][0] &&
         session['warden.user.user.key'][0][0] &&
