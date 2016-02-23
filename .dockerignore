@@ -1,3 +1,41 @@
+# Ignore version control files:
 /.git
+/.gitignore
+
+# Ignore docker and environment files:
+/.dockerignore
+/dev.env*
+/dev-entrypoint.sh
+/docker-compose.yml
+/Dockerfile
+
+# Ignore the examples folder:
+/examples
+
+# Ignore log files:
+/log/*
+!/log/.keep
+
+# Ignore temporary files:
 /tmp/*
-.byebug_history
+!/tmp/.keep
+
+# Ignore test files:
+/.rspec
+/Guardfile
+/spec
+
+# Ignore OS artifacts:
+.DS_Store
+
+# Ignore database dumps:
+/db/dumps
+
+# Ignore bash / IRB / Byebug history files
+/.bash_history
+/.byebug_history
+/.pry_history
+/.guard_history
+
+# Ignore unneeded configuration files:
+/config/database.yml*
