@@ -40,13 +40,13 @@ actioncable:
   command: puma cable/config.ru
 
 # The Web app + API load balancer:
-# web:
-#   image: rancher/load-balancer-service
-#   stdin_open: true
-#   tty: true
-#   ports: [ "28080:28080", "80:3000" ]
-#   labels:
-#     io.rancher.loadbalancer.target.rails: 80=3000
-#     io.rancher.loadbalancer.target.actioncable: 28080=28080
-#     io.rancher.scheduler.affinity:host_label: public-http=true
-#   links: [ "rails:rails", "actioncable:actioncable" ]
+web:
+  image: rancher/load-balancer-service
+  stdin_open: true
+  tty: true
+  ports: [ "28080:28080", "80:3000" ]
+  labels:
+    io.rancher.loadbalancer.target.rails: 80=3000
+    io.rancher.loadbalancer.target.actioncable: 28080=28080
+    io.rancher.scheduler.affinity:host_label: public-http=true
+  links: [ "rails:rails", "actioncable:actioncable" ]
