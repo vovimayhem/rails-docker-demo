@@ -2,10 +2,9 @@
 postgres:
   image: postgres:9.5.1
   volumes: [ "/var/lib/postgresql/data" ]
-  environment:
-    POSTGRES_PASSWORD: 3x4mpl3
   labels:
     io.rancher.scheduler.affinity:host_label: data-host=true
+  env_file: [ "postgres.env" ]
 
 redis:
   image: redis:3.0.7
@@ -23,8 +22,6 @@ sidekiq: &app
     - "postgres:postgres.example.com"
     - "redis:redis.example.com"
   environment: &app_environment
-    DATABASE_URL: postgres://postgres:3x4mpl3@postgres.example.com:5432/demo_production?pool=25&encoding=unicode&schema_search_path=public,partitioning
-    REDIS_URL: redis://redis.example.com:6379
     RAILS_ENV: production
     RACK_ENV: production
   env_file: [ "demo.env" ]

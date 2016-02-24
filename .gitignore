@@ -18,4 +18,4 @@
 
 # Ignore dotenv files
 /dev.env
-/examples/production-deploy-on-rancher/demo.env
+/examples/production-deploy-on-rancher/*.env
