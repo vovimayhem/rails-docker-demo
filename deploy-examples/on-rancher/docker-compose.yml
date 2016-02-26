@@ -1,0 +1,65 @@
+---
+postgres:
+  image: postgres:9.5.1
+  volumes: [ "/var/lib/postgresql/data" ]
+  labels:
+    io.rancher.scheduler.affinity:host_label: data-host=true
+  environment:
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+redis:
+  image: redis:3.0.7
+  volumes: [ "/var/lib/redis" ]
+  command: redis-server --appendonly yes
+  labels:
+    io.rancher.scheduler.affinity:host_label: data-host=true
+
+jobs: &app
+  image: vovimayhem/rails-docker-demo:latest
+  stdin_open: true
+  tty: true
+  command: sidekiq -c 25
+  links: [ "postgres", "redis" ]
+  environment: &app-env
+    DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/demo_production?pool=25&encoding=unicode&schema_search_path=public,partitioning
+    REDIS_URL: redis://redis.local:6379
+    RAILS_ENV: production
+    SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+    TWITTER_API_KEY: ${TWITTER_API_KEY}
+    TWITTER_API_SECRET: ${TWITTER_API_SECRET}
+  labels:
+    io.rancher.scheduler.affinity:host_label: app-host=true
+    io.rancher.container.hostname_override: container_name
+
+web-app: &web-app
+  <<: *app
+  command: /usr/bin/supervisord --configuration=/usr/src/app/config/nginx-rails.conf
+  environment: &web-app-env
+    <<: *app-env
+    APP_SESSION_DOMAIN: ${APP_SESSION_DOMAIN}
+    APP_WEB_URL: ${APP_WEB_URL}
+    APP_CABLE_URL: ${APP_CABLE_URL}
+    PUMA_MIN_THREADS: ${PUMA_RAILS_MIN_THREADS:-8}
+    PUMA_MAX_THREADS: ${PUMA_RAILS_MAX_THREADS:-12}
+    PUMA_WORKR_COUNT: ${PUMA_RAILS_WORKR_COUNT:-2}
+
+web-socket-app:
+  <<: *web_app
+  command: puma -t $${PUMA_MIN_THREADS}:$${PUMA_MAX_THREADS} -w $${PUMA_WORKR_COUNT} -e $${RAILS_ENV} cable/config.ru
+  environment:
+    <<: *web-app-env
+    PUMA_MIN_THREADS: ${PUMA_CABLE_MIN_THREADS:-8}
+    PUMA_MAX_THREADS: ${PUMA_CABLE_MAX_THREADS:-12}
+    PUMA_WORKR_COUNT: ${PUMA_CABLE_WORKR_COUNT:-2}
+
+# The Web app + API load balancer:
+web:
+  image: rancher/load-balancer-service
+  stdin_open: true
+  tty: true
+  ports: [ "28080:28080", "80:3000" ]
+  labels:
+    io.rancher.loadbalancer.target.rails: 80=3000
+    io.rancher.loadbalancer.target.actioncable: 28080=28080
+    io.rancher.scheduler.affinity:host_label: public-http=true
+  links: [ "web-app", "web-socket-app" ]

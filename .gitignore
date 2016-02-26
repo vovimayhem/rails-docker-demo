@@ -17,5 +17,9 @@
 .byebug_history
 
 # Ignore dotenv files
-/dev.env
-/examples/production-deploy-on-rancher/*.env
+*.env
+!*.example.env
+
+# Ignore answers files
+answers.txt
+!answers.example.txt

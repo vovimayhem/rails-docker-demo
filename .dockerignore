@@ -9,8 +9,8 @@
 /docker-compose.yml
 /Dockerfile
 
-# Ignore the examples folder:
-/examples
+# Ignore the deploy examples folder:
+/deploy-examples
 
 # Ignore log files:
 /log/*
