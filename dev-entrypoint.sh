@@ -16,7 +16,7 @@ function unlock_setup { rm -rf $APP_SETUP_LOCK; }
 function wait_setup { echo "Waiting for app setup to finish..."; sleep $APP_SETUP_WAIT; }
 
 # 2: 'Unlock' the setup process if the script exits prematurely:
-trap unlock_setup HUP INT QUIT KILL TERM
+trap unlock_setup HUP INT QUIT KILL TERM EXIT
 
 # 3: Wait until the setup 'lock' file no longer exists:
 while [ -f $APP_SETUP_LOCK ]; do wait_setup; done
