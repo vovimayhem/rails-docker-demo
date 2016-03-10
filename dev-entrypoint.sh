@@ -35,7 +35,7 @@ bundle check || bundle
 # instead of running `rake db:version  || rake db:setup`, as running that command
 # (at least on rails 4.2.4) will leave a couple of small ruby zombie processes
 # running in the container:
-check-or-setup-db
+check_or_setup_db
 
 # 7: 'Unlock' the setup process:
 unlock_setup
