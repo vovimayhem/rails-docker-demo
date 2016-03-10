@@ -1,41 +1,67 @@
 version: '2'
 
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  gems:
+    driver: local
+
+networks:
+  front-tier:
+    driver: bridge
+  back-tier:
+    driver: bridge
+
 services:
-  postgres:
+  db:
     image: postgres:9.5.1
-    ports: [ "5432:5432" ]
-    volumes: [ "postgres-data:/var/lib/postgresql/data" ]
-    # Make the database service available only on the "back-tier" network:
-    # NOTE: Although the service is available only on the "back-tier" network,
-    # the host-to-container port binding we've defined for development
-    # purposes will allow connection from the development host.
-    networks: [ "back-tier" ]
+    ports:
+      # We'll bind our host's port 5432 to postgres's port 5432, so we can use
+      # our database IDEs with it:
+      - 5432:5432
+    volumes:
+      # We'll store the postgres data in the 'postgres-data' volume we defined:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      # Make the database service available only on the "back-tier" network:
+      # NOTE: Although the service is available only on the "back-tier" network,
+      # the host-to-container port binding we've defined for development
+      # purposes will allow connection from the development host.
+      - back-tier
     environment:
       POSTGRES_PASSWORD: 3x4mpl3
 
-  redis:
+  keyval:
     image: redis:3.0.7
-    ports: [ "6379:6379" ]
-    volumes: [ "redis-data:/var/lib/redis" ]
+    ports:
+      # We'll bind our host's port 6379 to redis's port 6379, so we can use
+      # Redis Desktop Manager (or other tools) with it:
+      - 6379:6379
+    volumes:
+      # We'll store the redis data in the 'redis-data' volume we defined:
+      - redis-data:/var/lib/redis
     command: redis-server --appendonly yes
     # Make the redis service available only on the "back-tier" network:
     # NOTE: See networks comment on the postgres service above.
     networks: [ "back-tier" ]
 
-  # The app base configuration and the shared installed gems used by the rest of
-  # the app containers will be declared in this container named 'gems'. This
-  # container will effectively be a "data-only" container:
-  gems: &app_base
+  # The job processor container - we'll use this as a base for the rest of the
+  # containers:
+  jobs: &app
     image: ruby:2.2.3
+    command: sidekiq -c 25
+    entrypoint: /usr/src/app/dev-entrypoint.sh
+    networks:
+      - back-tier
     volumes:
       # Mount our app code directory (".") into our app containers at the
       # "/usr/src/app" folder:
-      - ".:/usr/src/app"
+      - .:/usr/src/app
 
-      # Declare this container's "/usr/local/bundle", so the rest of our app
-      # containers can mount the same gems installed by bundler, and prevent each
-      # app container to install the exact same gems over and over:
-      - "/usr/local/bundle"
+      # Mount the 'gems' volume on the folder that stores bundled gems:
+      - gems:/usr/local/bundle
 
     # Specify the directory from where all commands sent to the container will be
     # issued to where the code is mounted:
@@ -51,13 +77,13 @@ services:
     # Link to our postgres and redis containers, so they can be visible from our
     # app containers:
     links:
-      # We'll link the postgres container, making it available at the
-      # 'postgres.example.com' domain:
-      - "postgres:postgres.example.com"
+      # We'll include a link to the 'db' (postgres) container, making it
+      # visible from the container using the 'db' hostname:
+      - db
 
-      # We'll link the redis container, making it available at the
-      # 'redis.example.com' domain:
-      - "redis:redis.example.com"
+      # We'll include a link to the 'keyval' (redis) container, making it
+      # visible from the container using the 'keyval' hostname:
+      - keyval
 
     # Specify environment variables available for our app containers. We'll leave
     # a YML anchor in case we need to override or add more variables if needed on
@@ -70,11 +96,11 @@ services:
 
       # We'll set the DATABASE_URL environment variable for the app to connect
       # to our postgres container - no need to use a 'config/database.yml' file.
-      DATABASE_URL: postgres://postgres:3x4mpl3@postgres.example.com:5432/my_app_dev?pool=25&encoding=unicode&schema_search_path=public,partitioning
+      DATABASE_URL: postgres://postgres:3x4mpl3@db:5432/my_app_dev?pool=25&encoding=unicode&schema_search_path=public,partitioning
 
       # We'll set the REDIS_URL environment variable for the app to connect
       # to our redis container:
-      REDIS_URL: redis://redis.example.com:6379
+      REDIS_URL: redis://keyval:6379
 
       # We'll set the RAILS_ENV and RACK_ENV environment variables to
       # 'development', so our app containers will start in 'development' mode
@@ -89,35 +115,22 @@ services:
     # Keep in mind that any changes in this file will require a container restart
     # in order to be available on the app containers:
     env_file:
-      - "dev.env"
-
-  jobs: &app
-    <<: *app_base
-    volumes_from: [ "gems" ]
-    entrypoint: /usr/src/app/dev-entrypoint.sh
-    command: sidekiq -c 25
-    networks: [ "back-tier" ]
+      - dev.env
 
   web:
     <<: *app
     command: rails server -b 0.0.0.0 -p 3000 -P /tmp/rails.pid
-    ports: [ "3000:3000" ]
-    networks: [ "front-tier", "back-tier" ]
+    ports:
+      - 3000:3000
+    networks:
+      - front-tier
+      - back-tier
 
   cable:
     <<: *app
     command: puma --bind tcp://0.0.0.0:28080 cable/config.ru
-    ports: [ "28080:28080"]
-    networks: [ "front-tier", "back-tier" ]
-
-volumes:
-  postgres-data:
-    driver: local
-  redis-data:
-    driver: local
-
-networks:
-  front-tier:
-    driver: bridge
-  back-tier:
-    driver: bridge
+    ports:
+      - 28080:28080
+    networks:
+      - front-tier
+      - back-tier
