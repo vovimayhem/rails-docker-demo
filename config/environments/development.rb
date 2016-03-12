@@ -39,7 +39,8 @@ Rails.application.configure do
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
 
-  # Configure access to the web console from
+  # Configure access to the web console from other hosts besides localhost - as
+  # it will be the case with Docker on Mac OSX:
   config.web_console.whitelisted_ips = ENV["WEB_CONSOLE_WHITELISTED_IPS"].split \
     if ENV.key? "WEB_CONSOLE_WHITELISTED_IPS"
 end
